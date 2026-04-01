@@ -1,0 +1,29 @@
+# Environment / secrets
+.env
+
+# Python
+__pycache__/
+*.pyc
+*.pyo
+venv/
+.venv/
+*.egg-info/
+
+# Runtime data
+data/card_sort.db
+data/card_sort.db-shm
+data/card_sort.db-wal
+data/sessions/
+*.db
+*.db-shm
+*.db-wal
+
+# macOS
+.DS_Store
+
+# Editor
+.vscode/
+.idea/
+
+# Tests
+.pytest_cache/

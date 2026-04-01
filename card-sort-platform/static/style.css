@@ -1,0 +1,197 @@
+/* ── SOLAR FOR LEXIPOL — DESIGN TOKENS ──────────────────────────────────── */
+:root {
+  /* Brand colors */
+  --color-primary:      #014AA8;   /* Lexipol primary blue */
+  --color-primary-dark: #002B69;   /* Lexipol dark navy */
+  --color-navy:         #000F2F;   /* Lexipol darkest navy */
+  --color-secondary:    #6792CB;   /* Lexipol secondary blue */
+  --color-bright:       #026BEC;   /* Lexipol bright blue */
+  --color-accent:       #FFB81C;   /* Lexipol amber */
+
+  /* Light tints */
+  --color-blue-tint:    #DDE3FF;
+  --color-blue-mid:     #6691FF;
+
+  /* Text */
+  --color-text:         #191919;
+  --color-text-muted:   #717377;
+  --color-text-light:   #B4B6BA;
+
+  /* Neutrals */
+  --color-neutral-dark: #373A36;
+  --color-neutral:      #DDDDDF;
+  --color-bg:           #F5F5F5;
+  --color-white:        #ffffff;
+
+  /* Status */
+  --color-red:          #D50032;
+  --color-green:        #84C341;
+  --color-amber:        #FFB81C;
+
+  /* Typography */
+  --font-heading:  'Sora', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  --font-body:     'Roboto', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  --font-accent:   'Geist', 'Sora', monospace;
+}
+
+/* ── RESET & BASE ────────────────────────────────────────────────────────── */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+  font-family: var(--font-body);
+  font-size: 16px;
+  font-weight: 400;
+  color: var(--color-text);
+  background: var(--color-bg);
+  -webkit-font-smoothing: antialiased;
+}
+
+/* ── GRADIENT BACKGROUND ────────────────────────────────────────────────── */
+.gradient-bg {
+  min-height: 100vh;
+  background: linear-gradient(135deg, var(--color-primary) 0%, var(--color-primary-dark) 100%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 2rem;
+}
+
+/* ── CENTER WRAP ────────────────────────────────────────────────────────── */
+.center-wrap {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 2rem;
+}
+
+/* ── CARD ────────────────────────────────────────────────────────────────── */
+.card {
+  background: var(--color-white);
+  border-radius: 1.5rem;
+  padding: 3rem;
+  box-shadow: 0 25px 60px rgba(0, 0, 0, 0.15);
+  width: 100%;
+}
+
+.card--centered { text-align: center; }
+.card--wide     { max-width: 480px; }
+
+/* ── TYPOGRAPHY ─────────────────────────────────────────────────────────── */
+.heading-xl {
+  font-family: var(--font-heading);
+  font-size: 1.75rem;
+  font-weight: 700;
+  color: var(--color-navy);
+  margin-bottom: 0.5rem;
+}
+
+.heading-lg {
+  font-family: var(--font-heading);
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: var(--color-navy);
+}
+
+.subtext {
+  font-family: var(--font-body);
+  color: var(--color-text-muted);
+  line-height: 1.7;
+  margin-bottom: 2.25rem;
+  font-size: 0.95rem;
+}
+
+.muted { color: var(--color-text-light); font-weight: 400; }
+
+.hint {
+  font-family: var(--font-body);
+  font-size: 0.85rem;
+  color: var(--color-text-muted);
+  margin-top: 1rem;
+  padding: 0.75rem 1rem;
+  background: var(--color-bg);
+  border-radius: 0.65rem;
+  border-left: 3px solid var(--color-primary);
+}
+
+/* ── HERO ICON ──────────────────────────────────────────────────────────── */
+.hero-icon {
+  font-size: 3rem;
+  margin-bottom: 0.75rem;
+}
+
+/* ── BUTTONS ─────────────────────────────────────────────────────────────── */
+.btn {
+  display: inline-block;
+  border: none;
+  border-radius: 0.65rem;
+  font-family: var(--font-heading);
+  font-weight: 600;
+  cursor: pointer;
+  padding: 0.7rem 1.4rem;
+  font-size: 0.95rem;
+  text-decoration: none;
+  transition: opacity 0.15s, transform 0.1s;
+  text-align: center;
+}
+.btn:hover   { opacity: 0.9; }
+.btn:active  { transform: scale(0.98); }
+
+.btn--primary   { background: var(--color-primary); color: var(--color-white); }
+.btn--secondary { background: var(--color-bg); color: var(--color-neutral-dark); }
+.btn--lg        { font-size: 1rem; padding: 1rem 1.5rem; }
+
+.btn:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+  transform: none;
+}
+
+.btn-stack {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+/* ── FORM ELEMENTS ──────────────────────────────────────────────────────── */
+.form-label {
+  display: block;
+  font-family: var(--font-heading);
+  font-weight: 600;
+  font-size: 0.85rem;
+  color: var(--color-neutral-dark);
+  margin-bottom: 0.4rem;
+}
+
+.form-input {
+  width: 100%;
+  padding: 0.75rem 1rem;
+  border: 1.5px solid var(--color-neutral);
+  border-radius: 0.6rem;
+  font-size: 1rem;
+  font-family: var(--font-body);
+  outline: none;
+  transition: border-color 0.15s;
+  color: var(--color-text);
+}
+.form-input:focus { border-color: var(--color-primary); }
+
+/* ── INFO BOX ───────────────────────────────────────────────────────────── */
+.info-box {
+  background: var(--color-bg);
+  border-left: 3px solid var(--color-primary);
+  border-radius: 0.75rem;
+  padding: 1.25rem;
+  font-size: 0.9rem;
+  color: var(--color-neutral-dark);
+  line-height: 1.8;
+}
+
+/* ── SCROLLBARS ─────────────────────────────────────────────────────────── */
+::-webkit-scrollbar       { width: 6px; height: 6px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: var(--color-neutral); border-radius: 99px; }
+::-webkit-scrollbar-thumb:hover { background: var(--color-text-light); }
+
+/* ── FOCUS VISIBLE ──────────────────────────────────────────────────────── */
+:focus-visible { outline: 2px solid var(--color-primary); outline-offset: 2px; }

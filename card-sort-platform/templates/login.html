@@ -1,0 +1,163 @@
+{% extends "base.html" %}
+{% block title %}Researcher Login{% endblock %}
+
+{% block head %}
+<style>
+  body {
+    min-height: 100vh;
+    margin: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: linear-gradient(135deg, #014AA8, #002B69);
+  }
+
+  .login-card {
+    background: #fff;
+    border-radius: 1.5rem;
+    box-shadow: 0 8px 40px rgba(0, 15, 47, 0.22), 0 2px 8px rgba(0, 15, 47, 0.12);
+    padding: 2.5rem 2.25rem 2rem;
+    width: 100%;
+    max-width: 400px;
+  }
+
+  .login-logo {
+    display: flex;
+    align-items: center;
+    gap: .6rem;
+    margin-bottom: 1.75rem;
+  }
+
+  .login-logo-mark {
+    width: 36px;
+    height: 36px;
+    background: #014AA8;
+    border-radius: .6rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #fff;
+    font-family: 'Sora', sans-serif;
+    font-weight: 800;
+    font-size: 1rem;
+  }
+
+  .login-logo-text {
+    font-family: 'Sora', sans-serif;
+    font-weight: 700;
+    font-size: .95rem;
+    color: #000F2F;
+    line-height: 1.2;
+  }
+
+  .login-logo-sub {
+    font-family: 'Roboto', sans-serif;
+    font-weight: 400;
+    font-size: .72rem;
+    color: #717377;
+  }
+
+  .login-heading {
+    font-family: 'Sora', sans-serif;
+    font-weight: 700;
+    font-size: 1.35rem;
+    color: #000F2F;
+    margin: 0 0 .35rem;
+  }
+
+  .login-subhead {
+    font-family: 'Roboto', sans-serif;
+    font-size: .88rem;
+    color: #717377;
+    margin: 0 0 1.75rem;
+  }
+
+  .login-label {
+    display: block;
+    font-family: 'Sora', sans-serif;
+    font-weight: 600;
+    font-size: .82rem;
+    color: #000F2F;
+    margin-bottom: .4rem;
+  }
+
+  .login-input {
+    display: block;
+    width: 100%;
+    box-sizing: border-box;
+    padding: .65rem .85rem;
+    border: 1.5px solid #DDDDDF;
+    border-radius: .6rem;
+    font-family: 'Roboto', sans-serif;
+    font-size: .95rem;
+    color: #191919;
+    background: #fff;
+    outline: none;
+    transition: border-color .15s;
+  }
+
+  .login-input:focus {
+    border-color: #014AA8;
+    box-shadow: 0 0 0 3px rgba(1, 74, 168, .12);
+  }
+
+  .login-error {
+    margin-top: .5rem;
+    font-family: 'Roboto', sans-serif;
+    font-size: .82rem;
+    color: #D50032;
+  }
+
+  .login-btn {
+    margin-top: 1.5rem;
+    display: block;
+    width: 100%;
+    padding: .75rem;
+    background: #014AA8;
+    color: #fff;
+    border: none;
+    border-radius: .6rem;
+    font-family: 'Sora', sans-serif;
+    font-weight: 600;
+    font-size: .95rem;
+    cursor: pointer;
+    transition: background .15s;
+  }
+
+  .login-btn:hover { background: #002B69; }
+  .login-btn:active { background: #001A45; }
+</style>
+{% endblock %}
+
+{% block body %}
+<div class="login-card">
+  <div class="login-logo">
+    <div class="login-logo-mark">L</div>
+    <div>
+      <div class="login-logo-text">Lexipol</div>
+      <div class="login-logo-sub">Solar Design System</div>
+    </div>
+  </div>
+
+  <h1 class="login-heading">Researcher Dashboard</h1>
+  <p class="login-subhead">Enter the researcher password to continue.</p>
+
+  <form method="POST" action="/login">
+    <label class="login-label" for="password">Password</label>
+    <input
+      class="login-input{% if error %} login-input--error{% endif %}"
+      type="password"
+      id="password"
+      name="password"
+      placeholder="Enter password"
+      autocomplete="current-password"
+      autofocus
+      style="{% if error %}border-color:#D50032;{% endif %}"
+    />
+    {% if error %}
+      <p class="login-error">{{ error }}</p>
+    {% endif %}
+    <button type="submit" class="login-btn">Sign in</button>
+  </form>
+</div>
+{% endblock %}

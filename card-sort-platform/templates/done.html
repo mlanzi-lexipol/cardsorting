@@ -1,0 +1,33 @@
+{% extends "base.html" %}
+{% block title %}Thank you{% endblock %}
+{% block body_class %}gradient-bg{% endblock %}
+
+{% block body %}
+<div class="center-wrap">
+  <div class="card card--centered card--wide">
+    {% if already_done %}
+      <div class="hero-icon">✅</div>
+      <h1 class="heading-xl">Already submitted</h1>
+      <p class="subtext">
+        This session has already been completed.<br>
+        Thank you for participating!
+      </p>
+    {% else %}
+      <div class="hero-icon">✅</div>
+      <h1 class="heading-xl">
+        Thank you{% if participant_name %}, {{ participant_name }}{% endif %}!
+      </h1>
+      <p class="subtext">
+        Your results have been recorded automatically.<br>
+        You can close this window — no download needed.
+      </p>
+      <div class="info-box" style="text-align:left;margin-top:1.5rem">
+        <p style="font-size:.9rem;color:#373A36;font-family:'Roboto',sans-serif">
+          <strong>What happens next:</strong> the researcher will review your groupings
+          alongside other participants' results to understand how admins naturally organise their work.
+        </p>
+      </div>
+    {% endif %}
+  </div>
+</div>
+{% endblock %}

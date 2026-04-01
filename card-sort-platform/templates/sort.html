@@ -1,0 +1,641 @@
+{% extends "base.html" %}
+{% block title %}Card Sort{% endblock %}
+{% block body_class %}sort-page{% endblock %}
+
+{% block head %}
+<style>
+  /* ── LAYOUT ── */
+  .sort-page { display:flex; flex-direction:column; height:100vh; overflow:hidden; }
+  .topbar { background:#fff; border-bottom:1px solid #DDDDDF; padding:.75rem 1.5rem;
+            display:flex; align-items:center; justify-content:space-between;
+            position:sticky; top:0; z-index:200; gap:1rem; flex-shrink:0;
+            box-shadow:0 1px 4px rgba(0,15,47,.06); }
+  .sort-body { flex:1; display:flex; overflow:hidden; }
+
+  /* ── UNSORTED TRAY ── */
+  .tray { width:215px; flex-shrink:0; background:#fff; border-right:1px solid #DDDDDF;
+          display:flex; flex-direction:column; overflow:hidden; }
+  .tray-header { padding:.85rem 1rem; border-bottom:1px solid #F5F5F5; flex-shrink:0; }
+  .tray-label { font-family:'Geist','Sora',sans-serif; font-size:.72rem; font-weight:700;
+                text-transform:uppercase; letter-spacing:.07em; color:#B4B6BA; }
+  .tray-cards { flex:1; overflow-y:auto; padding:.6rem; display:flex;
+                flex-direction:column; gap:.45rem; transition:background .15s; }
+  .tray-cards.drag-over { background:#DDE3FF; }
+  .tray-empty { text-align:center; padding:2rem 0; color:#6792CB;
+                font-size:.85rem; line-height:1.6; }
+
+  /* ── COLUMNS AREA ── */
+  .columns-area { flex:1; overflow-x:auto; overflow-y:auto; padding:1.25rem;
+                  display:flex; gap:1rem; align-items:flex-start;
+                  background:#F5F5F5; }
+
+  /* ── CATEGORY COLUMN ── */
+  .col { min-width:190px; max-width:210px; flex-shrink:0; background:#fff;
+         border:2px solid #DDDDDF; border-radius:1rem; padding:.9rem;
+         transition:border-color .15s, background .15s;
+         box-shadow:0 1px 4px rgba(0,15,47,.05); }
+  .col.drag-over { background:#DDE3FF; border-color:#014AA8; }
+
+  /* ── COLUMN HEADER ── */
+  .col-head { display:flex; align-items:center; justify-content:space-between;
+              margin-bottom:.65rem; gap:.35rem; }
+
+  /* ── EDITABLE GROUP NAME ── */
+  .col-name-wrap { display:flex; align-items:center; gap:.25rem; cursor:pointer;
+                   flex:1; min-width:0; padding:.1rem 0; }
+  .col-name { font-family:'Sora',sans-serif; font-weight:700; font-size:.88rem;
+              color:#000F2F; line-height:1.3; white-space:nowrap;
+              overflow:hidden; text-overflow:ellipsis; }
+  .col-edit-icon { font-size:.7rem; opacity:0; transition:opacity .12s;
+                   flex-shrink:0; line-height:1; }
+  .col-name-wrap:hover .col-edit-icon { opacity:1; }
+  .col-name-input { width:100%; padding:.2rem .4rem; border:1.5px solid #014AA8;
+                    border-radius:.35rem; font-family:'Sora',sans-serif;
+                    font-weight:700; font-size:.88rem; color:#000F2F;
+                    background:#fff; outline:none;
+                    box-shadow:0 0 0 3px rgba(1,74,168,.1); }
+
+  /* ── COLUMN META ── */
+  .col-meta { display:flex; align-items:center; gap:.25rem; flex-shrink:0; }
+  .col-count { font-family:'Geist','Sora',sans-serif; font-size:.7rem;
+               background:#F5F5F5; color:#717377;
+               padding:.1rem .4rem; border-radius:99px; font-weight:600; }
+  .badge-new { font-family:'Geist','Sora',sans-serif; font-size:.62rem;
+               background:#FFF3CC; color:#7A5100;
+               padding:.1rem .35rem; border-radius:99px; font-weight:700; }
+  .col-action-btn { background:none; border:none; color:#B4B6BA; cursor:pointer;
+                    font-size:.82rem; line-height:1; padding:0 1px;
+                    transition:color .12s; }
+  .col-action-btn:hover { color:#014AA8; }
+  .col-remove { background:none; border:none; color:#B4B6BA; cursor:pointer;
+                font-size:1rem; line-height:1; padding:0 1px;
+                transition:color .12s; }
+  .col-remove:hover { color:#D50032; }
+
+  /* ── MERGE PANEL (inline, below header) ── */
+  .merge-panel { background:#F5F5F5; border:1.5px solid #DDDDDF;
+                 border-radius:.6rem; padding:.55rem; margin-bottom:.65rem; }
+  .merge-panel-label { font-family:'Sora',sans-serif; font-size:.68rem; font-weight:700;
+                       color:#717377; text-transform:uppercase; letter-spacing:.06em;
+                       display:block; margin-bottom:.4rem; }
+  .merge-panel-options { display:flex; flex-direction:column; gap:.3rem;
+                         margin-bottom:.4rem; }
+  .merge-panel-item { background:#fff; border:1.5px solid #DDDDDF; border-radius:.4rem;
+                      padding:.32rem .55rem; font-family:'Roboto',sans-serif;
+                      font-size:.78rem; color:#000F2F; cursor:pointer; text-align:left;
+                      transition:border-color .1s, background .1s; }
+  .merge-panel-item:hover { border-color:#014AA8; background:#DDE3FF; color:#014AA8; }
+  .merge-cancel { font-size:.74rem; color:#717377; background:none; border:none;
+                  cursor:pointer; font-family:'Roboto',sans-serif; padding:.1rem .2rem;
+                  transition:color .1s; }
+  .merge-cancel:hover { color:#D50032; }
+
+  /* ── CARDS INSIDE COLUMN ── */
+  .col-cards { display:flex; flex-direction:column; gap:.35rem; min-height:56px; }
+  .col-drop-hint { text-align:center; color:#B4B6BA; font-size:.78rem;
+                   padding:.65rem; border:1.5px dashed #DDDDDF; border-radius:.5rem; }
+
+  /* ── ADD COLUMN ── */
+  .add-col { min-width:175px; flex-shrink:0; }
+  .add-col-btn { width:100%; background:transparent; border:2px dashed #B4B6BA;
+                 border-radius:1rem; padding:1rem; color:#B4B6BA;
+                 font-family:'Sora',sans-serif; font-size:.88rem;
+                 cursor:pointer; transition:all .15s; }
+  .add-col-btn:hover { border-color:#014AA8; color:#014AA8; background:#fff; }
+  .add-col-form { border:2px dashed #014AA8; border-radius:1rem; padding:1rem; background:#fff; }
+  .add-col-input { width:100%; padding:.5rem .6rem; border:1.5px solid #DDDDDF;
+                   border-radius:.5rem; font-size:.88rem; margin-bottom:.55rem;
+                   font-family:'Roboto',sans-serif; outline:none; color:#191919; }
+  .add-col-input:focus { border-color:#014AA8; }
+  .add-col-actions { display:flex; gap:.4rem; }
+
+  /* ── DRAG CARD ── */
+  .dcard { background:#fff; border:1.5px solid #DDDDDF; border-radius:.5rem;
+           padding:.55rem .7rem; font-family:'Roboto',sans-serif;
+           font-size:.8rem; line-height:1.45; color:#191919;
+           cursor:grab; user-select:none;
+           box-shadow:0 1px 3px rgba(0,0,0,.06);
+           transition:border-color .1s, box-shadow .1s, opacity .1s; }
+  .dcard:active { cursor:grabbing; }
+  .dcard.dragging { opacity:.4; border-color:#014AA8;
+                    box-shadow:0 4px 14px rgba(1,74,168,.2); }
+
+  /* ── TOPBAR ── */
+  .progress-wrap { flex:1; max-width:300px; display:flex; align-items:center; gap:.75rem; }
+  .progress-bar-bg { flex:1; height:8px; background:#DDDDDF; border-radius:99px; overflow:hidden; }
+  .progress-bar-fill { height:100%; background:#014AA8; border-radius:99px; transition:width .3s; }
+  .progress-label { font-family:'Geist','Sora',sans-serif; font-size:.82rem;
+                    color:#717377; font-weight:600; white-space:nowrap; }
+  .timer { font-family:'Geist','Sora',sans-serif; font-size:.9rem;
+           color:#717377; font-weight:600; font-variant-numeric:tabular-nums; }
+  .logo { font-family:'Sora',sans-serif; font-weight:800; font-size:1rem;
+          color:#000F2F; white-space:nowrap; }
+
+  /* ── SUBMIT AREA ── */
+  .submit-area { display:flex; flex-direction:column; align-items:flex-end; gap:.2rem; }
+  .submit-btn { padding:.5rem 1.1rem; font-size:.88rem; }
+  .submit-reminder { font-family:'Roboto',sans-serif; font-size:.74rem;
+                     color:#717377; opacity:0; transition:opacity .25s;
+                     white-space:nowrap; }
+  .submit-reminder.visible { opacity:1; }
+
+  /* ── INTRO OVERLAY ── */
+  .overlay { position:fixed; inset:0; background:rgba(0,43,105,.88); z-index:500;
+             display:flex; align-items:center; justify-content:center; padding:2rem; }
+  .overlay-card { background:#fff; border-radius:1.5rem; padding:2.5rem;
+                  max-width:500px; width:100%; box-shadow:0 25px 60px rgba(0,0,0,.22); }
+</style>
+{% endblock %}
+
+{% block body %}
+
+<!-- ── INTRO OVERLAY ── -->
+<div class="overlay" id="js-overlay">
+  <div class="overlay-card">
+    <h1 class="heading-lg" style="margin-bottom:.75rem">Before you start</h1>
+    <div class="info-box" style="margin-bottom:1.5rem">
+      <p>You'll see <strong>20 task cards</strong> in the tray on the left.</p>
+      <p style="margin-top:.4rem">
+        <strong>Create your own groups</strong> using the <em>"+ New group"</em> button,
+        then drag cards into whichever group feels right.
+        You can rename, merge, or delete groups at any time.
+      </p>
+      <p style="margin-top:.4rem">No right or wrong answers — just go with your instinct.</p>
+    </div>
+    <label class="form-label">Your name <span class="muted">(optional)</span></label>
+    <input type="text" id="js-name" class="form-input" placeholder="e.g. Jordan Smith"
+           value="{{ participant_name }}" />
+    <button class="btn btn--primary" style="width:100%;margin-top:1.25rem" id="js-start">
+      Start sorting →
+    </button>
+  </div>
+</div>
+
+<!-- ── TOP BAR ── -->
+<div class="topbar">
+  <span class="logo">🗂️ Card Sort</span>
+  <div class="progress-wrap">
+    <div class="progress-bar-bg">
+      <div class="progress-bar-fill" id="js-progress" style="width:0%"></div>
+    </div>
+    <span class="progress-label" id="js-progress-label">0 / 20</span>
+  </div>
+  <div style="display:flex;align-items:center;gap:1.25rem">
+    <span class="timer" id="js-timer">0:00</span>
+    <div class="submit-area">
+      <button class="btn btn--primary submit-btn" id="js-submit" disabled>
+        Submit (20 left)
+      </button>
+      <span class="submit-reminder" id="js-reminder"></span>
+    </div>
+  </div>
+</div>
+
+<!-- ── SORT BODY ── -->
+<div class="sort-body">
+
+  <!-- Unsorted tray -->
+  <div class="tray">
+    <div class="tray-header">
+      <span class="tray-label">Unsorted (<span id="js-unsorted-count">20</span>)</span>
+    </div>
+    <div class="tray-cards" id="js-tray"
+         ondragover="onDragOver(event,'__tray__')"
+         ondrop="onDrop(event,'__tray__')"
+         ondragleave="onDragLeave(event)">
+    </div>
+  </div>
+
+  <!-- Category columns -->
+  <div class="columns-area" id="js-columns"></div>
+
+</div>
+
+<script>
+// ── DATA ─────────────────────────────────────────────────────────────────────
+const TOKEN     = {{ token | tojson }};
+const ALL_CARDS = {{ cards_json | safe }};
+
+// ── STATE ─────────────────────────────────────────────────────────────────────
+let assignments  = {};    // { cardId: categoryName }
+let categories   = [];    // [{ name, isNew }]
+let dragging     = null;  // card id currently being dragged
+let dragOverZone = null;
+let editingCat   = null;  // category name with active inline-rename input (or null)
+let mergeMenuCat = null;  // category name with open merge panel (or null)
+let startTime    = null;
+let timerInterval = null;
+let elapsed       = 0;
+
+// ── DOM REFS ──────────────────────────────────────────────────────────────────
+const tray        = document.getElementById('js-tray');
+const colsArea    = document.getElementById('js-columns');
+const progressBar = document.getElementById('js-progress');
+const progressLbl = document.getElementById('js-progress-label');
+const unsortedLbl = document.getElementById('js-unsorted-count');
+const timerEl     = document.getElementById('js-timer');
+const submitBtn   = document.getElementById('js-submit');
+const reminderEl  = document.getElementById('js-reminder');
+
+// ── TIMER ─────────────────────────────────────────────────────────────────────
+function fmtTime(s) {
+  return `${Math.floor(s / 60)}:${String(s % 60).padStart(2, '0')}`;
+}
+function startTimer() {
+  startTime = Date.now();
+  timerInterval = setInterval(() => {
+    elapsed = Math.floor((Date.now() - startTime) / 1000);
+    timerEl.textContent = fmtTime(elapsed);
+  }, 1000);
+}
+
+// ── RENDER ────────────────────────────────────────────────────────────────────
+function render() {
+  renderTray();
+  renderColumns();
+  updateProgress();
+}
+
+function renderTray() {
+  const unsorted = ALL_CARDS.filter(c => !assignments[c.id]);
+  unsortedLbl.textContent = unsorted.length;
+  tray.innerHTML = '';
+  if (unsorted.length === 0) {
+    tray.innerHTML = '<div class="tray-empty">All cards<br>sorted 🎉</div>';
+    return;
+  }
+  unsorted.forEach(c => tray.appendChild(makeCard(c)));
+}
+
+function renderColumns() {
+  colsArea.innerHTML = '';
+  if (categories.length === 0) {
+    const tip = document.createElement('div');
+    tip.style.cssText = 'color:#B4B6BA;font-size:.9rem;padding:2rem 1rem;align-self:center;text-align:center;line-height:1.7;font-family:Roboto,sans-serif';
+    tip.innerHTML = '← Use the <strong style="color:#014AA8;font-family:Sora,sans-serif">+ New group</strong> button<br>to create your first group,<br>then drag cards into it.';
+    colsArea.appendChild(tip);
+  } else {
+    categories.forEach(cat => colsArea.appendChild(makeColumn(cat)));
+  }
+  colsArea.appendChild(makeAddColButton());
+}
+
+// ── CARD ELEMENT ──────────────────────────────────────────────────────────────
+// Used for both tray cards and cards inside groups — dragging works from either.
+function makeCard(card) {
+  const el = document.createElement('div');
+  el.className   = 'dcard';
+  el.textContent = card.label;
+  el.draggable   = true;
+  el.dataset.id  = card.id;
+  el.addEventListener('dragstart', e => {
+    dragging = card.id;
+    e.dataTransfer.effectAllowed = 'move';
+    el.classList.add('dragging');
+  });
+  el.addEventListener('dragend', () => {
+    dragging = null;
+    el.classList.remove('dragging');
+  });
+  return el;
+}
+
+// ── COLUMN ELEMENT ────────────────────────────────────────────────────────────
+function makeColumn(cat) {
+  const catCards = ALL_CARDS.filter(c => assignments[c.id] === cat.name);
+
+  const col = document.createElement('div');
+  col.className  = 'col';
+  col.dataset.cat = cat.name;
+
+  // ── Header ──────────────────────────────────────────────────────────────
+  const head = document.createElement('div');
+  head.className = 'col-head';
+
+  // Name area (editable on click)
+  const nameWrap = document.createElement('div');
+  nameWrap.className = 'col-name-wrap';
+
+  if (editingCat === cat.name) {
+    // Inline rename input
+    const inp = document.createElement('input');
+    inp.className = 'col-name-input';
+    inp.value = cat.name;
+
+    // Guard against the blur event firing after Enter already called rename
+    let committed = false;
+    const commit = () => {
+      if (committed) return;
+      committed = true;
+      renameCategory(cat.name, inp.value);
+    };
+    inp.addEventListener('keydown', e => {
+      if (e.key === 'Enter')  commit();
+      if (e.key === 'Escape') { committed = true; editingCat = null; render(); }
+    });
+    inp.addEventListener('blur', commit);
+    nameWrap.appendChild(inp);
+    setTimeout(() => inp.focus(), 30);
+
+  } else {
+    const nameEl = document.createElement('span');
+    nameEl.className   = 'col-name';
+    nameEl.textContent = cat.name;
+
+    const pencil = document.createElement('span');
+    pencil.className   = 'col-edit-icon';
+    pencil.textContent = '✏️';
+    pencil.title       = 'Rename group';
+
+    nameWrap.appendChild(nameEl);
+    nameWrap.appendChild(pencil);
+    nameWrap.addEventListener('click', () => {
+      editingCat   = cat.name;
+      mergeMenuCat = null;
+      render();
+    });
+  }
+
+  // Meta row (count badge · merge button · delete button)
+  const meta = document.createElement('div');
+  meta.className = 'col-meta';
+
+  if (cat.isNew) {
+    const badge = document.createElement('span');
+    badge.className   = 'badge-new';
+    badge.textContent = 'new';
+    meta.appendChild(badge);
+  }
+
+  const countEl = document.createElement('span');
+  countEl.className   = 'col-count';
+  countEl.textContent = catCards.length;
+  meta.appendChild(countEl);
+
+  // Merge button — only visible when there is more than one group
+  if (categories.length > 1) {
+    const mergeBtn = document.createElement('button');
+    mergeBtn.className   = 'col-action-btn';
+    mergeBtn.title       = 'Merge into…';
+    mergeBtn.textContent = '⊞';
+    mergeBtn.addEventListener('click', e => {
+      e.stopPropagation();
+      mergeMenuCat = mergeMenuCat === cat.name ? null : cat.name;
+      editingCat   = null;
+      render();
+    });
+    meta.appendChild(mergeBtn);
+  }
+
+  // Delete button — always visible (cards return to unsorted tray)
+  const removeBtn = document.createElement('button');
+  removeBtn.className   = 'col-remove';
+  removeBtn.title       = 'Delete group (cards return to unsorted)';
+  removeBtn.textContent = '×';
+  removeBtn.addEventListener('click', e => {
+    e.stopPropagation();
+    removeCategory(cat.name);
+  });
+  meta.appendChild(removeBtn);
+
+  head.appendChild(nameWrap);
+  head.appendChild(meta);
+  col.appendChild(head);
+
+  // ── Merge panel (inline, below header) ──────────────────────────────────
+  if (mergeMenuCat === cat.name) {
+    const panel = document.createElement('div');
+    panel.className = 'merge-panel';
+
+    const lbl = document.createElement('span');
+    lbl.className   = 'merge-panel-label';
+    lbl.textContent = 'Merge into…';
+    panel.appendChild(lbl);
+
+    const opts = document.createElement('div');
+    opts.className = 'merge-panel-options';
+    categories.filter(c => c.name !== cat.name).forEach(other => {
+      const btn = document.createElement('button');
+      btn.className   = 'merge-panel-item';
+      btn.textContent = other.name;
+      btn.addEventListener('click', e => {
+        e.stopPropagation();
+        mergeCategory(cat.name, other.name);
+      });
+      opts.appendChild(btn);
+    });
+    panel.appendChild(opts);
+
+    const cancelBtn = document.createElement('button');
+    cancelBtn.className   = 'merge-cancel';
+    cancelBtn.textContent = 'Cancel';
+    cancelBtn.addEventListener('click', e => {
+      e.stopPropagation();
+      mergeMenuCat = null;
+      render();
+    });
+    panel.appendChild(cancelBtn);
+    col.appendChild(panel);
+  }
+
+  // ── Cards area ───────────────────────────────────────────────────────────
+  const cardsEl = document.createElement('div');
+  cardsEl.className = 'col-cards';
+
+  if (catCards.length === 0) {
+    const hint = document.createElement('div');
+    hint.className   = 'col-drop-hint';
+    hint.textContent = 'Drop cards here';
+    cardsEl.appendChild(hint);
+  } else {
+    catCards.forEach(c => cardsEl.appendChild(makeCard(c)));
+  }
+  col.appendChild(cardsEl);
+
+  // Drop targets on the column itself so dragging over any child still works
+  col.addEventListener('dragover',  e => onDragOver(e, cat.name));
+  col.addEventListener('drop',      e => onDrop(e, cat.name));
+  col.addEventListener('dragleave', onDragLeave);
+
+  return col;
+}
+
+// ── ADD COLUMN BUTTON ─────────────────────────────────────────────────────────
+function makeAddColButton() {
+  const wrap = document.createElement('div');
+  wrap.className = 'add-col';
+
+  const btn = document.createElement('button');
+  btn.className   = 'add-col-btn';
+  btn.textContent = '+ New group';
+  btn.onclick     = () => showAddColForm(wrap);
+  wrap.appendChild(btn);
+  return wrap;
+}
+
+function showAddColForm(wrap) {
+  wrap.innerHTML = `
+    <div class="add-col-form">
+      <input type="text" class="add-col-input" id="js-new-cat" placeholder="Group name…" />
+      <div class="add-col-actions">
+        <button class="btn btn--primary" style="flex:1;font-size:.82rem;padding:.45rem"
+                onclick="addCategory()">Add</button>
+        <button class="btn btn--secondary" style="flex:1;font-size:.82rem;padding:.45rem"
+                onclick="render()">Cancel</button>
+      </div>
+    </div>`;
+  setTimeout(() => document.getElementById('js-new-cat').focus(), 50);
+  document.getElementById('js-new-cat').addEventListener('keydown', e => {
+    if (e.key === 'Enter')  addCategory();
+    if (e.key === 'Escape') render();
+  });
+}
+
+// ── CATEGORY OPERATIONS ───────────────────────────────────────────────────────
+function addCategory() {
+  const name = (document.getElementById('js-new-cat')?.value || '').trim();
+  if (!name || categories.find(c => c.name === name)) return;
+  categories.push({ name, isNew: true });
+  render();
+}
+
+function removeCategory(name) {
+  ALL_CARDS.forEach(c => { if (assignments[c.id] === name) delete assignments[c.id]; });
+  categories   = categories.filter(c => c.name !== name);
+  if (mergeMenuCat === name) mergeMenuCat = null;
+  if (editingCat   === name) editingCat   = null;
+  render();
+}
+
+function renameCategory(oldName, newName) {
+  newName    = newName.trim();
+  editingCat = null;
+  // Bail on empty or unchanged name, or name collision with another group
+  if (!newName || newName === oldName || categories.find(c => c.name === newName)) {
+    render();
+    return;
+  }
+  ALL_CARDS.forEach(c => { if (assignments[c.id] === oldName) assignments[c.id] = newName; });
+  const cat = categories.find(c => c.name === oldName);
+  if (cat) cat.name = newName;
+  render();
+}
+
+function mergeCategory(fromName, intoName) {
+  ALL_CARDS.forEach(c => { if (assignments[c.id] === fromName) assignments[c.id] = intoName; });
+  categories   = categories.filter(c => c.name !== fromName);
+  mergeMenuCat = null;
+  render();
+}
+
+// ── PROGRESS & REMINDER ───────────────────────────────────────────────────────
+function updateProgress() {
+  const sorted = Object.keys(assignments).length;
+  const pct    = Math.round((sorted / 20) * 100);
+  progressBar.style.width = pct + '%';
+  progressLbl.textContent = `${sorted} / 20`;
+
+  const left = 20 - sorted;
+  submitBtn.disabled    = sorted < 20;
+  submitBtn.textContent = sorted < 20 ? `Submit (${left} left)` : 'Submit ✓';
+
+  // Gentle reminder: show once participant has started sorting but hasn't finished
+  if (sorted > 0 && sorted < 20) {
+    reminderEl.textContent = `${left} card${left === 1 ? '' : 's'} still need a group`;
+    reminderEl.classList.add('visible');
+  } else {
+    reminderEl.classList.remove('visible');
+  }
+}
+
+// ── DRAG & DROP ───────────────────────────────────────────────────────────────
+// Cards dragged from the tray OR from any group all use the same dragging/drop
+// mechanism — assignment is updated on drop regardless of the card's origin.
+function onDragOver(e, zone) {
+  e.preventDefault();
+  if (dragOverZone === zone) return;
+  dragOverZone = zone;
+  document.querySelectorAll('.col, .tray-cards').forEach(el => el.classList.remove('drag-over'));
+  if (zone === '__tray__') {
+    tray.classList.add('drag-over');
+  } else {
+    const col = [...document.querySelectorAll('.col')].find(c => c.dataset.cat === zone);
+    if (col) col.classList.add('drag-over');
+  }
+}
+
+function onDrop(e, zone) {
+  e.preventDefault();
+  if (!dragging) return;
+  if (zone === '__tray__') {
+    delete assignments[dragging];
+  } else {
+    assignments[dragging] = zone;  // works whether card came from tray or another group
+  }
+  dragging     = null;
+  dragOverZone = null;
+  document.querySelectorAll('.col, .tray-cards').forEach(el => el.classList.remove('drag-over'));
+  render();
+}
+
+function onDragLeave(e) {
+  if (e.relatedTarget && e.currentTarget.contains(e.relatedTarget)) return;
+  e.currentTarget.classList.remove('drag-over');
+  dragOverZone = null;
+}
+
+// ── INTRO & START ─────────────────────────────────────────────────────────────
+document.getElementById('js-start').addEventListener('click', async () => {
+  const name = document.getElementById('js-name').value.trim() || 'Anonymous';
+  await fetch('/api/session/start', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ token: TOKEN, name }),
+  });
+  document.getElementById('js-overlay').style.display = 'none';
+  startTimer();
+  render();
+});
+
+document.getElementById('js-name').addEventListener('keydown', e => {
+  if (e.key === 'Enter') document.getElementById('js-start').click();
+});
+
+// ── SUBMIT ────────────────────────────────────────────────────────────────────
+submitBtn.addEventListener('click', async () => {
+  if (Object.keys(assignments).length < 20) return;  // button is disabled but guard anyway
+
+  clearInterval(timerInterval);
+  submitBtn.disabled    = true;
+  submitBtn.textContent = 'Saving…';
+
+  const asgn = ALL_CARDS.map(c => ({
+    card_id:    c.id,
+    card_label: c.label,
+    category:   assignments[c.id] || 'Unsorted',
+  }));
+  const cats = categories.map(cat => ({
+    name:            cat.name,
+    is_user_created: cat.isNew,
+    card_count:      ALL_CARDS.filter(c => assignments[c.id] === cat.name).length,
+  }));
+
+  const res = await fetch('/api/session/submit', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ token: TOKEN, assignments: asgn, categories: cats, duration_seconds: elapsed }),
+  });
+
+  if (res.ok) {
+    window.location.href = '/done';
+  } else {
+    submitBtn.disabled    = false;
+    submitBtn.textContent = 'Retry ↑';
+    alert('Something went wrong — please try again.');
+  }
+});
+
+// ── INIT ──────────────────────────────────────────────────────────────────────
+// Overlay is shown immediately; render() is deferred until participant clicks Start.
+</script>
+{% endblock %}

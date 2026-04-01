@@ -1,0 +1,26 @@
+{% extends "base.html" %}
+{% block title %}Welcome{% endblock %}
+{% block body_class %}gradient-bg{% endblock %}
+
+{% block body %}
+<div class="center-wrap">
+  <div class="card card--centered card--wide">
+    <div class="hero-icon">🗂️</div>
+    <h1 class="heading-xl">Admin Card Sort</h1>
+    <p class="subtext">
+      Help us understand how admins naturally group their daily tasks.<br>
+      No right or wrong answers — just sort what feels natural to you.
+    </p>
+    <div class="btn-stack">
+      <form method="POST" action="/join" style="margin:0">
+        <button type="submit" class="btn btn--primary btn--lg" style="width:100%">
+          I'm a Participant →
+        </button>
+      </form>
+      <a href="/dashboard" class="btn btn--secondary btn--lg">
+        Researcher Dashboard
+      </a>
+    </div>
+  </div>
+</div>
+{% endblock %}
