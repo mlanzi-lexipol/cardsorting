@@ -1,0 +1,9 @@
+{
+  "version": 2,
+  "builds": [
+    { "src": "card-sort-platform/app.py", "use": "@vercel/python" }
+  ],
+  "routes": [
+    { "src": "/(.*)", "dest": "card-sort-platform/app.py" }
+  ]
+}
