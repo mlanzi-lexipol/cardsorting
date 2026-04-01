@@ -69,9 +69,10 @@ def _fmt_time(seconds):
 
 
 def _save_session_json(sess, assignments_data, categories_data):
-    """Write a local JSON snapshot of the completed session as a backup."""
-    out_dir = os.path.join(os.path.dirname(__file__), 'data', 'sessions')
-    os.makedirs(out_dir, exist_ok=True)
+    """Write a local JSON snapshot of the completed session as a backup.
+    On serverless environments (e.g. Vercel) the project root is read-only;
+    we fall back to /tmp which is always writable.
+    """
     token = sess.get('token', 'unknown')
     fname = f"session_{token}_{datetime.now().strftime('%Y%m%d')}.json"
     data  = {
@@ -79,8 +80,17 @@ def _save_session_json(sess, assignments_data, categories_data):
         'assignments': assignments_data,
         'categories':  categories_data,
     }
-    with open(os.path.join(out_dir, fname), 'w') as f:
-        json.dump(data, f, indent=2, default=str)
+    for out_dir in [
+        os.path.join(os.path.dirname(__file__), 'data', 'sessions'),
+        os.path.join('/tmp', 'card-sort-sessions'),
+    ]:
+        try:
+            os.makedirs(out_dir, exist_ok=True)
+            with open(os.path.join(out_dir, fname), 'w') as f:
+                json.dump(data, f, indent=2, default=str)
+            return
+        except OSError:
+            continue
 
 
 def _agreement_matrix(all_assignments, session_ids):
